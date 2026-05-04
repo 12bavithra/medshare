@@ -1,5 +1,4 @@
-const API_URL = `${window.location.origin}/api`;
-const MEDICINE_API = `${API_URL}/medicines`;
+const API_BASE = `${window.location.origin}/api`;
 
 function ensureRecipient() {
   const token = localStorage.getItem("token");
@@ -30,8 +29,8 @@ async function loadRecipientRequests() {
 
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${MEDICINE_API}/recipient/requests`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const res = await fetch(`${API_BASE}/medicines/recipient/requests`, {
+      headers: { "Authorization": `Bearer ${token}` }
     });
 
     const items = await res.json();
