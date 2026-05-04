@@ -44,8 +44,8 @@ console.log("Loaded email user:", process.env.EMAIL_USER);
 console.log("Loaded email pass:", process.env.EMAIL_PASS ? "✅ Exists" : "❌ Missing");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://127.0.0.1:5500';
+const PORT = process.env.PORT;
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -58,7 +58,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 connectDB();
 
 // Allow requests from configured client origin and also same-origin (localhost:PORT)
-const allowedOrigins = [CLIENT_ORIGIN, `http://localhost:${PORT}`];
+const allowedOrigins = [CLIENT_ORIGIN];
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
