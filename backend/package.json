@@ -28,5 +28,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
-  }
+  },
+  "main": "clearUsers.js",
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
