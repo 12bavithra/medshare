@@ -10,8 +10,38 @@ async function parseResponseSafely(res) {
   }
 }
 
+function getRoleRedirect(role) {
+  const normalizedRole = (role || "").toString().toUpperCase();
+  if (normalizedRole === "ADMIN") return "admin.html";
+  if (normalizedRole === "DONOR") return "donor-dashboard.html";
+  return "dashboard.html";
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("role");
+  window.location.href = "login.html";
+}
+
 // Handle Register
 const registerForm = document.getElementById("registerForm");
+const loginForm = document.getElementById("loginForm");
+const existingToken = localStorage.getItem("token");
+const existingRole =
+  localStorage.getItem("role") ||
+  (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}").role || "";
+    } catch {
+      return "";
+    }
+  })();
+
+if (existingToken && (loginForm || registerForm)) {
+  window.location.href = getRoleRedirect(existingRole);
+}
+
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -36,28 +66,33 @@ if (registerForm) {
 }
 
 // Handle Login
-const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    const res = await fetch(`${AUTH_API_BASE}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-});
+    try {
+      const res = await fetch(`${AUTH_API_BASE}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await parseResponseSafely(res);
-    if (data.token) {
+      const data = await parseResponseSafely(res);
+      if (!res.ok || !data.token) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      const role = (data.user && data.user.role) || "";
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("user", JSON.stringify(data.user || {}));
+      localStorage.setItem("role", role);
       alert("Login successful!");
-      // Redirect to dashboard after successful login
-      window.location.href = "dashboard.html";
-    } else {
-      alert(data.message || "Login failed");
+      window.location.href = getRoleRedirect(role);
+    } catch (e) {
+      alert("Network error");
     }
   });
 }
@@ -84,5 +119,13 @@ if (whoAmIButton) {
     } catch (e) {
       alert("Network error");
     }
+  });
+}
+
+const logoutLink = document.getElementById("logoutLink");
+if (logoutLink) {
+  logoutLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    logout();
   });
 }

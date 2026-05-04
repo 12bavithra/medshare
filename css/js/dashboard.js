@@ -1,7 +1,8 @@
-const AUTH_API = "http://localhost:5000/api/auth";
-const MEDICINE_API = "http://localhost:5000/api/medicines";
-const REQUEST_API = "http://localhost:5000/api/requests";
-const ADMIN_API = "http://localhost:5000/api/admin";
+const API_BASE = `${window.location.origin}/api`;
+const AUTH_API = `${API_BASE}/auth`;
+const MEDICINE_API = `${API_BASE}/medicines`;
+const REQUEST_API = `${API_BASE}/requests`;
+const ADMIN_API = `${API_BASE}/admin`;
 
 let currentUser = null;
 

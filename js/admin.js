@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api";
+const API_URL = `${window.location.origin}/api`;
 const ADMIN_API = `${API_URL}/admin`;
 
 // Check if user is logged in and has ADMIN role
