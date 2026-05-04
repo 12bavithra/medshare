@@ -1,4 +1,14 @@
-const API_URL = "https://medshare-5u9n.onrender.com/api";
+const AUTH_API_BASE = `${window.location.origin}/api/auth`;
+
+async function parseResponseSafely(res) {
+  const raw = await res.text();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { message: raw };
+  }
+}
 
 // Handle Register
 const registerForm = document.getElementById("registerForm");
@@ -10,13 +20,13 @@ if (registerForm) {
     const password = document.getElementById("password").value;
     const role = document.getElementById("role").value;
 
-   const res = await fetch(`${API_URL}/auth/register`, {
+   const res = await fetch(`${AUTH_API_BASE}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role })
     });
 
-    const data = await res.json();
+    const data = await parseResponseSafely(res);
     if (!res.ok) {
       alert(data.message || "Registration failed");
       return;
@@ -33,13 +43,13 @@ if (loginForm) {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    const res = await fetch(`${API_URL}/auth/login`, {
+    const res = await fetch(`${AUTH_API_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
 });
 
-    const data = await res.json();
+    const data = await parseResponseSafely(res);
     if (data.token) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -62,10 +72,10 @@ if (whoAmIButton) {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/me`, {
+      const res = await fetch(`${AUTH_API_BASE}/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
+      const data = await parseResponseSafely(res);
       if (!res.ok) {
         alert(data.message || "Failed to fetch user");
         return;
