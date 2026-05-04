@@ -45,6 +45,17 @@ async function fetchWithAuth(path, method = "GET", body = null) {
   return { ok: res.ok, data };
 }
 
+function extractItems(data) {
+  console.log("FULL API RESPONSE:", data);
+  const items = data?.medicines || data?.users || data?.requests || data;
+  if (!items || items.length === 0) return [];
+  if (!Array.isArray(items)) {
+    console.error("Expected array but got:", items);
+    return null;
+  }
+  return items;
+}
+
 // Check if user is logged in
 function checkAdminAuth() {
   if (!token) {
@@ -119,12 +130,12 @@ async function loadAdminMedicines() {
     medicinesList.innerHTML = "";
     
     const { ok, data } = await fetchWithAuth("/admin/medicines");
-    if (!ok || !Array.isArray(data)) {
+    const medicines = extractItems(data);
+    if (!ok || medicines === null) {
       loading.style.display = "none";
       medicinesList.innerHTML = '<p>Failed to load medicines</p>';
       return;
     }
-    const medicines = data;
     
     loading.style.display = "none";
     
@@ -184,12 +195,12 @@ async function loadAdminUsers() {
     usersList.innerHTML = "";
     
     const { ok, data } = await fetchWithAuth("/admin/users");
-    if (!ok || !Array.isArray(data)) {
+    const users = extractItems(data);
+    if (!ok || users === null) {
       loading.style.display = "none";
       usersList.innerHTML = '<p>Failed to load users</p>';
       return;
     }
-    const users = data;
     
     loading.style.display = "none";
     

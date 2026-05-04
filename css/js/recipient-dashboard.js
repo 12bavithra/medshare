@@ -43,6 +43,17 @@ async function fetchWithAuth(path, method = "GET") {
   return { ok: res.ok, data };
 }
 
+function extractItems(data) {
+  console.log("FULL API RESPONSE:", data);
+  const items = data?.medicines || data?.users || data?.requests || data;
+  if (!items || items.length === 0) return [];
+  if (!Array.isArray(items)) {
+    console.error("Expected array but got:", items);
+    return null;
+  }
+  return items;
+}
+
 function ensureRecipient() {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -66,12 +77,17 @@ async function loadRecipientRequests() {
 
   try {
     const { ok, data } = await fetchWithAuth("/medicines/recipient/requests");
+    const items = extractItems(data);
     if (!ok) {
       loading.style.display = "none";
       alert("Failed to load your requests");
       return;
     }
-    const items = data;
+    if (items === null) {
+      loading.style.display = "none";
+      alert("Failed to load your requests");
+      return;
+    }
     loading.style.display = "none";
 
     if (!Array.isArray(items) || items.length === 0) {

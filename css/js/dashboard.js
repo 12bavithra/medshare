@@ -48,6 +48,17 @@ async function fetchWithAuth(path, method = "GET", body = null) {
   return { ok: res.ok, data, status: res.status };
 }
 
+function extractItems(data) {
+  console.log("FULL API RESPONSE:", data);
+  const items = data?.medicines || data?.users || data?.requests || data;
+  if (!items || items.length === 0) return [];
+  if (!Array.isArray(items)) {
+    console.error("Expected array but got:", items);
+    return null;
+  }
+  return items;
+}
+
 let currentUser = null;
 
 function redirectToLogin() {
@@ -142,11 +153,11 @@ function showRoleDashboard(role) {
 async function loadDonorDashboard() {
   try {
     const result = await fetchWithAuth('/medicines/donor/medicines');
-    if (!result.ok || !Array.isArray(result.data)) {
+    const medicines = extractItems(result.data);
+    if (!result.ok || medicines === null) {
       document.getElementById('donorMedicines').innerHTML = '<div class="empty-state">Error loading medicines</div>';
       return;
     }
-    const medicines = result.data;
     
     displayDonorMedicines(medicines);
   } catch (e) {
@@ -226,12 +237,20 @@ async function loadRecipientDashboard() {
 
     const medicinesPath = `/medicines${params.toString() ? `?${params.toString()}` : ''}`;
     const medicinesResult = await fetchWithAuth(medicinesPath);
-    const medicines = Array.isArray(medicinesResult.data) ? medicinesResult.data : [];
+    const medicines = extractItems(medicinesResult.data);
+    if (medicines === null) {
+      document.getElementById('availableMedicines').innerHTML = '<div class="empty-state">Error loading data</div>';
+      return;
+    }
     displayAvailableMedicines(medicines);
 
     // Load my requests
     const requestsResult = await fetchWithAuth('/requests/my');
-    const requests = Array.isArray(requestsResult.data) ? requestsResult.data : [];
+    const requests = extractItems(requestsResult.data);
+    if (requests === null) {
+      document.getElementById('myRequests').innerHTML = '<div class="empty-state">Error loading requests</div>';
+      return;
+    }
     displayMyRequests(requests);
 
   } catch (e) {
@@ -397,11 +416,11 @@ async function loadAdminOverview(token) {
   try {
     // Load medicines for stats
     const medicinesResult = await fetchWithAuth('/admin/medicines');
-    const medicines = Array.isArray(medicinesResult.data) ? medicinesResult.data : [];
+    const medicines = extractItems(medicinesResult.data) || [];
     
     // Load users for stats
     const usersResult = await fetchWithAuth('/admin/users');
-    const users = Array.isArray(usersResult.data) ? usersResult.data : [];
+    const users = extractItems(usersResult.data) || [];
     
     // Calculate stats
     const totalMedicines = medicines.length;
@@ -523,7 +542,11 @@ function showAdminTab(tabName, event = null) {
 async function loadAdminMedicines(token) {
   try {
     const result = await fetchWithAuth('/admin/medicines');
-    const medicines = Array.isArray(result.data) ? result.data : [];
+    const medicines = extractItems(result.data);
+    if (medicines === null) {
+      document.getElementById('adminMedicines').innerHTML = '<div class="empty-state">Error loading medicines</div>';
+      return;
+    }
     
     const container = document.getElementById('adminMedicines');
     if (!medicines.length) {
@@ -574,7 +597,11 @@ async function loadAdminMedicines(token) {
 async function loadAdminRequests(token) {
   try {
     const result = await fetchWithAuth('/requests');
-    const requests = Array.isArray(result.data) ? result.data : [];
+    const requests = extractItems(result.data);
+    if (requests === null) {
+      document.getElementById('adminRequests').innerHTML = '<div class="empty-state">Error loading requests</div>';
+      return;
+    }
     
     const container = document.getElementById('adminRequests');
     if (!requests.length) {
@@ -623,7 +650,11 @@ async function loadAdminRequests(token) {
 async function loadAdminUsers(token) {
   try {
     const result = await fetchWithAuth('/admin/users');
-    const users = Array.isArray(result.data) ? result.data : [];
+    const users = extractItems(result.data);
+    if (users === null) {
+      document.getElementById('adminUsers').innerHTML = '<div class="empty-state">Error loading users</div>';
+      return;
+    }
     
     const container = document.getElementById('adminUsers');
     if (!users.length) {
