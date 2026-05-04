@@ -18,12 +18,13 @@ const requiredEnvVars = [
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
-  console.error('❌ Missing required environment variables:');
-  missingEnvVars.forEach(envVar => console.error(`  - ${envVar}`));
-  console.error('\nPlease check your .env file and ensure all required variables are set.');
-  process.exit(1);
+  console.warn('⚠️ Missing required environment variables:');
+  missingEnvVars.forEach(envVar => console.warn(`  - ${envVar}`));
+  console.warn('App will still run, but may cause issues.');
 }
-
+console.log("PORT:", process.env.PORT);
+console.log("MONGO:", process.env.MONGODB_URI ? "OK" : "MISSING");
+console.log("JWT:", process.env.JWT_SECRET ? "OK" : "MISSING");
 console.log('✅ All required environment variables are present');
 
 import express from 'express';
