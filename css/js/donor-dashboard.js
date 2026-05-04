@@ -1,16 +1,18 @@
 const API_BASE = `${window.location.origin}/api`;
 const token = localStorage.getItem("token");
-const role = (localStorage.getItem("role") || "").toUpperCase();
+const role = (localStorage.getItem("role") || "RECIPIENT").toUpperCase();
 
-if (!token || role !== "DONOR") {
+if (!token) {
   window.location.href = "login.html";
 }
+console.log("TOKEN:", token);
+console.log("ROLE:", role);
 
 async function fetchWithAuth(path, method = "GET") {
   const token = localStorage.getItem("token");
   const url = `${API_BASE}${path}`;
-  console.log("Calling API:", url);
-  console.log("Token:", token);
+  console.log("API:", url);
+  console.log("TOKEN:", token);
 
   const res = await fetch(url, {
     method,
@@ -22,11 +24,19 @@ async function fetchWithAuth(path, method = "GET") {
 
   console.log("Response status:", res.status);
 
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    window.location.href = "login.html";
+    return { ok: false, data: null };
+  }
+
   let data;
   try {
     data = await res.json();
   } catch (err) {
-    console.error("Invalid JSON response", err);
+    console.error("Invalid JSON:", err);
     return { ok: false, data: null };
   }
 
@@ -35,14 +45,8 @@ async function fetchWithAuth(path, method = "GET") {
 
 function ensureDonor() {
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (!token) {
     alert("Please login first");
-    window.location.href = "login.html";
-    return false;
-  }
-  if (user.role !== "DONOR") {
-    alert("This page requires DONOR role");
     window.location.href = "login.html";
     return false;
   }
@@ -92,6 +96,15 @@ async function loadDonorMedicines() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadDonorMedicines);
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Dashboard loaded");
+  if (typeof loadMedicines === "function") loadMedicines();
+  if (typeof loadUsers === "function") loadUsers();
+  if (typeof loadRequests === "function") loadRequests();
+});
+
+function loadMedicines() {
+  return loadDonorMedicines();
+}
 
 

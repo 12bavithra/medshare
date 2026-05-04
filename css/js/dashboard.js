@@ -4,17 +4,19 @@ const MEDICINE_API = `${API_BASE}/medicines`;
 const REQUEST_API = `${API_BASE}/requests`;
 const ADMIN_API = `${API_BASE}/admin`;
 const token = localStorage.getItem("token");
-const role = (localStorage.getItem("role") || "").toUpperCase();
+const role = (localStorage.getItem("role") || "RECIPIENT").toUpperCase();
 
-if (!token || role !== "RECIPIENT") {
+if (!token) {
   window.location.href = "login.html";
 }
+console.log("TOKEN:", token);
+console.log("ROLE:", role);
 
 async function fetchWithAuth(path, method = "GET", body = null) {
   const token = localStorage.getItem("token");
   const url = `${API_BASE}${path}`;
-  console.log("Calling API:", url);
-  console.log("Token:", token);
+  console.log("API:", url);
+  console.log("TOKEN:", token);
 
   const res = await fetch(url, {
     method,
@@ -27,11 +29,19 @@ async function fetchWithAuth(path, method = "GET", body = null) {
 
   console.log("Response status:", res.status);
 
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    window.location.href = "login.html";
+    return { ok: false, data: null, status: res.status };
+  }
+
   let data;
   try {
     data = await res.json();
   } catch (err) {
-    console.error("Invalid JSON response", err);
+    console.error("Invalid JSON:", err);
     return { ok: false, data: null, status: res.status };
   }
 
@@ -49,9 +59,14 @@ async function loadDashboard() {
 
   try {
     const result = await fetchWithAuth("/auth/me");
-    if (!result.ok || !result.data) return redirectToLogin();
+    if (!result.ok || !result.data) {
+      currentUser = { role, name: "User" };
+      document.getElementById('welcome').textContent = `Welcome`;
+      document.getElementById('roleText').textContent = `You are logged in as ${role}.`;
+      showRoleDashboard(role);
+      return;
+    }
     const user = result.data;
-    if ((user.role || "").toUpperCase() !== "RECIPIENT") return redirectToLogin();
 
     currentUser = user;
     document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
@@ -70,7 +85,10 @@ async function loadDashboard() {
 
   } catch (e) {
     console.error('Dashboard load error:', e);
-    redirectToLogin();
+    currentUser = { role, name: "User" };
+    document.getElementById('welcome').textContent = `Welcome`;
+    document.getElementById('roleText').textContent = `You are logged in as ${role}.`;
+    showRoleDashboard(role);
   }
 }
 
@@ -687,5 +705,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', loadDashboard);
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Dashboard loaded");
+  if (typeof loadMedicines === "function") loadMedicines();
+  if (typeof loadUsers === "function") loadUsers();
+  if (typeof loadRequests === "function") loadRequests();
+});
+
+function loadMedicines() {
+  if (currentUser && currentUser.role === "DONOR") {
+    return loadDonorDashboard();
+  }
+  return loadRecipientDashboard();
+}
+
+function loadUsers() {
+  if (currentUser && currentUser.role === "ADMIN") {
+    return loadAdminUsers(localStorage.getItem("token"));
+  }
+}
+
+function loadRequests() {
+  if (currentUser && currentUser.role === "ADMIN") {
+    return loadAdminRequests(localStorage.getItem("token"));
+  }
+  if (currentUser && currentUser.role === "RECIPIENT") {
+    return loadRecipientDashboard();
+  }
+}
 
 

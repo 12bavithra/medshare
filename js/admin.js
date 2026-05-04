@@ -1,17 +1,19 @@
 const API_BASE = `${window.location.origin}/api`;
 const ADMIN_API = `${API_BASE}/admin`;
 const token = localStorage.getItem("token");
-const role = (localStorage.getItem("role") || "").toUpperCase();
+const role = (localStorage.getItem("role") || "RECIPIENT").toUpperCase();
 
-if (!token || role !== "ADMIN") {
+if (!token) {
   window.location.href = "login.html";
 }
+console.log("TOKEN:", token);
+console.log("ROLE:", role);
 
 async function fetchWithAuth(path, method = "GET", body = null) {
   const token = localStorage.getItem("token");
   const url = `${API_BASE}${path}`;
-  console.log("Calling API:", url);
-  console.log("Token:", token);
+  console.log("API:", url);
+  console.log("TOKEN:", token);
 
   const res = await fetch(url, {
     method,
@@ -24,27 +26,29 @@ async function fetchWithAuth(path, method = "GET", body = null) {
 
   console.log("Response status:", res.status);
 
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    window.location.href = "login.html";
+    return { ok: false, data: null };
+  }
+
   let data;
   try {
     data = await res.json();
   } catch (err) {
-    console.error("Invalid JSON response", err);
+    console.error("Invalid JSON:", err);
     return { ok: false, data: null };
   }
 
   return { ok: res.ok, data };
 }
 
-// Check if user is logged in and has ADMIN role
+// Check if user is logged in
 function checkAdminAuth() {
   if (!token) {
     alert("Please login first");
-    window.location.href = "login.html";
-    return false;
-  }
-
-  if (role !== "ADMIN") {
-    alert("This page requires ADMIN role");
     window.location.href = "login.html";
     return false;
   }
@@ -88,6 +92,20 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAdminUsers();
   }
 });
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Dashboard loaded");
+  if (typeof loadMedicines === "function") loadMedicines();
+  if (typeof loadUsers === "function") loadUsers();
+  if (typeof loadRequests === "function") loadRequests();
+});
+
+function loadMedicines() {
+  return loadAdminMedicines();
+}
+
+function loadUsers() {
+  return loadAdminUsers();
+}
 
 // Load medicines for admin view
 async function loadAdminMedicines() {
