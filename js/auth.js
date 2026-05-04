@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "https://medshare-5u9n.onrender.com/api";
 
 // Handle Register
 const registerForm = document.getElementById("registerForm");
