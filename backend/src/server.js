@@ -51,14 +51,16 @@ const __dirname = path.dirname(__filename);
 
 // Resolve frontend directory (prefer medshare-frontend/, else project root)
 const PROJECT_ROOT = path.resolve(__dirname, '../../');
-const CANDIDATE_FRONTEND = path.join(PROJECT_ROOT, 'medshare-frontend');
-const FRONTEND_DIR = fs.existsSync(CANDIDATE_FRONTEND) ? CANDIDATE_FRONTEND : PROJECT_ROOT;
+const FRONTEND_DIR = PROJECT_ROOT;
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
 connectDB();
 
 // Allow requests from configured client origin and also same-origin (localhost:PORT)
-const allowedOrigins = [CLIENT_ORIGIN];
+const allowedOrigins = [
+  CLIENT_ORIGIN,
+  "https://medshare-5u9n.onrender.com"
+];
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
