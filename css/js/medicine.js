@@ -1,7 +1,6 @@
-const API_BASE_URL = "https://medshare-b5zb.onrender.com";
-const AUTH_API = `${API_BASE_URL}/api/auth`;
-const MEDICINE_API = `${API_BASE_URL}/api/medicines`;
-const REQUEST_API = `${API_BASE_URL}/api/requests`;
+const API_URL = "http://localhost:5000/api";
+const AUTH_API = `${API_URL}/auth`;
+const MEDICINE_API = `${API_URL}/medicines`;
 
 // Check if user is logged in and has required role
 function checkAuth(requiredRole = null) {
@@ -89,7 +88,7 @@ async function loadMedicines() {
     
     loading.style.display = "none";
     
-    if (!Array.isArray(medicines) || medicines.length === 0) {
+    if (medicines.length === 0) {
       emptyState.style.display = "block";
       return;
     }
@@ -104,7 +103,7 @@ async function loadMedicines() {
             <span class="expiry">Expires: ${new Date(medicine.expiryDate).toLocaleDateString()}</span>
             <span class="quantity">Quantity: ${medicine.quantity}</span>
           </div>
-          <p class="donor">Donated by: ${medicine.donor?.name || 'Unknown'}</p>
+          <p class="donor">Donated by: ${medicine.donor.name}</p>
         </div>
         <div class="medicine-actions">
           <button class="btn green request-btn" data-id="${medicine._id}">
@@ -114,8 +113,9 @@ async function loadMedicines() {
       </div>
     `).join("");
     
-    document.querySelectorAll(".request-btn").forEach(btn => {
-      btn.addEventListener("click", handleRequest);
+    // Add event listeners to request buttons
+    document.querySelectorAll('.request-btn').forEach(btn => {
+      btn.addEventListener('click', handleRequest);
     });
     
   } catch (err) {
@@ -129,11 +129,12 @@ async function handleRequest(e) {
   const medicineId = e.target.dataset.id;
   
   if (!checkAuth("RECIPIENT")) return;
+  
   if (!confirm("Are you sure you want to request this medicine?")) return;
   
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${REQUEST_API}/${medicineId}`, {
+    const res = await fetch(`${API_URL}/requests/${medicineId}`, {
       method: "POST",
       headers: { "Authorization": `Bearer ${token}` }
     });
@@ -142,7 +143,7 @@ async function handleRequest(e) {
     
     if (res.ok) {
       alert("Medicine requested successfully!");
-      loadMedicines();
+      loadMedicines(); // Refresh the list
     } else {
       alert(data.message || "Failed to request medicine");
     }
@@ -151,7 +152,7 @@ async function handleRequest(e) {
   }
 }
 
-// Load medicines when page loads
+// Load medicines when page loads (for medicines.html)
 if (document.getElementById("medicinesGrid")) {
   loadMedicines();
 }

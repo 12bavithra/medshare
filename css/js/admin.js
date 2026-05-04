@@ -1,6 +1,5 @@
-const API_BASE_URL = "https://medshare-b5zb.onrender.com";
-const ADMIN_API = `${API_BASE_URL}/api/admin`;
-
+const API_URL = "http://localhost:5000/api";
+const ADMIN_API = `${API_URL}/admin`;
 
 // Check if user is logged in and has ADMIN role
 function checkAdminAuth() {
