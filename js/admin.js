@@ -1,19 +1,23 @@
-const API_URL = `${window.location.origin}/api`;
-const ADMIN_API = `${API_URL}/admin`;
+const API_BASE = `${window.location.origin}/api`;
+const ADMIN_API = `${API_BASE}/admin`;
+const token = localStorage.getItem("token");
+const role = (localStorage.getItem("role") || "").toUpperCase();
+
+if (!token || role !== "ADMIN") {
+  window.location.href = "login.html";
+}
 
 // Check if user is logged in and has ADMIN role
 function checkAdminAuth() {
-  const token = localStorage.getItem("token");
   if (!token) {
     alert("Please login first");
     window.location.href = "login.html";
     return false;
   }
-  
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (user.role !== "ADMIN") {
+
+  if (role !== "ADMIN") {
     alert("This page requires ADMIN role");
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return false;
   }
   

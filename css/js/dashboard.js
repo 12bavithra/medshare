@@ -3,6 +3,12 @@ const AUTH_API = `${API_BASE}/auth`;
 const MEDICINE_API = `${API_BASE}/medicines`;
 const REQUEST_API = `${API_BASE}/requests`;
 const ADMIN_API = `${API_BASE}/admin`;
+const token = localStorage.getItem("token");
+const role = (localStorage.getItem("role") || "").toUpperCase();
+
+if (!token || role !== "RECIPIENT") {
+  window.location.href = "login.html";
+}
 
 let currentUser = null;
 
@@ -11,13 +17,13 @@ function redirectToLogin() {
 }
 
 async function loadDashboard() {
-  const token = localStorage.getItem('token');
   if (!token) return redirectToLogin();
 
   try {
     const res = await fetch(`${AUTH_API}/me`, { headers: { Authorization: `Bearer ${token}` } });
     const user = await res.json();
     if (!res.ok) return redirectToLogin();
+    if ((user.role || "").toUpperCase() !== "RECIPIENT") return redirectToLogin();
 
     currentUser = user;
     document.getElementById('welcome').textContent = `Welcome, ${user.name}`;
@@ -30,6 +36,7 @@ async function loadDashboard() {
     document.getElementById('logoutLink').addEventListener('click', () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('role');
       window.location.href = 'login.html';
     });
 

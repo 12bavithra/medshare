@@ -1,4 +1,10 @@
 const API_BASE = `${window.location.origin}/api`;
+const token = localStorage.getItem("token");
+const role = (localStorage.getItem("role") || "").toUpperCase();
+
+if (!token || role !== "DONOR") {
+  window.location.href = "login.html";
+}
 
 function ensureDonor() {
   const token = localStorage.getItem("token");
@@ -10,7 +16,7 @@ function ensureDonor() {
   }
   if (user.role !== "DONOR") {
     alert("This page requires DONOR role");
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return false;
   }
   return true;
