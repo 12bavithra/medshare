@@ -6,6 +6,33 @@ if (!token || role !== "RECIPIENT") {
   window.location.href = "login.html";
 }
 
+async function fetchWithAuth(path, method = "GET") {
+  const token = localStorage.getItem("token");
+  const url = `${API_BASE}${path}`;
+  console.log("Calling API:", url);
+  console.log("Token:", token);
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  console.log("Response status:", res.status);
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    console.error("Invalid JSON response", err);
+    return { ok: false, data: null };
+  }
+
+  return { ok: res.ok, data };
+}
+
 function ensureRecipient() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -34,12 +61,13 @@ async function loadRecipientRequests() {
   tbody.innerHTML = "";
 
   try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_BASE}/medicines/recipient/requests`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    const items = await res.json();
+    const { ok, data } = await fetchWithAuth("/medicines/recipient/requests");
+    if (!ok) {
+      loading.style.display = "none";
+      alert("Failed to load your requests");
+      return;
+    }
+    const items = data;
     loading.style.display = "none";
 
     if (!Array.isArray(items) || items.length === 0) {

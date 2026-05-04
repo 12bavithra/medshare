@@ -7,6 +7,34 @@ if (!token || role !== "ADMIN") {
   window.location.href = "login.html";
 }
 
+async function fetchWithAuth(path, method = "GET", body = null) {
+  const token = localStorage.getItem("token");
+  const url = `${API_BASE}${path}`;
+  console.log("Calling API:", url);
+  console.log("Token:", token);
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  console.log("Response status:", res.status);
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    console.error("Invalid JSON response", err);
+    return { ok: false, data: null };
+  }
+
+  return { ok: res.ok, data };
+}
+
 // Check if user is logged in and has ADMIN role
 function checkAdminAuth() {
   if (!token) {
@@ -57,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load initial data
   if (checkAdminAuth()) {
     loadAdminMedicines();
+    loadAdminUsers();
   }
 });
 
@@ -71,12 +100,13 @@ async function loadAdminMedicines() {
     loading.style.display = "block";
     medicinesList.innerHTML = "";
     
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${ADMIN_API}/medicines`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    
-    const medicines = await res.json();
+    const { ok, data } = await fetchWithAuth("/admin/medicines");
+    if (!ok || !Array.isArray(data)) {
+      loading.style.display = "none";
+      medicinesList.innerHTML = '<p>Failed to load medicines</p>';
+      return;
+    }
+    const medicines = data;
     
     loading.style.display = "none";
     
@@ -135,12 +165,13 @@ async function loadAdminUsers() {
     loading.style.display = "block";
     usersList.innerHTML = "";
     
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${ADMIN_API}/users`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    
-    const users = await res.json();
+    const { ok, data } = await fetchWithAuth("/admin/users");
+    if (!ok || !Array.isArray(data)) {
+      loading.style.display = "none";
+      usersList.innerHTML = '<p>Failed to load users</p>';
+      return;
+    }
+    const users = data;
     
     loading.style.display = "none";
     
@@ -172,19 +203,9 @@ async function handleAdminAction(medicineId, action) {
   if (!confirm(`Are you sure you want to ${action} this medicine request?`)) return;
   
   try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${ADMIN_API}/approve/${medicineId}`, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ action })
-    });
+    const { ok, data } = await fetchWithAuth(`/admin/approve/${medicineId}`, "PUT", { action });
     
-    const data = await res.json();
-    
-    if (res.ok) {
+    if (ok) {
       alert(`Medicine request ${action}d successfully!`);
       loadAdminMedicines(); // Refresh the list
     } else {

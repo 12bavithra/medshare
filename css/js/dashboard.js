@@ -10,6 +10,34 @@ if (!token || role !== "RECIPIENT") {
   window.location.href = "login.html";
 }
 
+async function fetchWithAuth(path, method = "GET", body = null) {
+  const token = localStorage.getItem("token");
+  const url = `${API_BASE}${path}`;
+  console.log("Calling API:", url);
+  console.log("Token:", token);
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  console.log("Response status:", res.status);
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (err) {
+    console.error("Invalid JSON response", err);
+    return { ok: false, data: null, status: res.status };
+  }
+
+  return { ok: res.ok, data, status: res.status };
+}
+
 let currentUser = null;
 
 function redirectToLogin() {
@@ -20,9 +48,9 @@ async function loadDashboard() {
   if (!token) return redirectToLogin();
 
   try {
-    const res = await fetch(`${AUTH_API}/me`, { headers: { Authorization: `Bearer ${token}` } });
-    const user = await res.json();
-    if (!res.ok) return redirectToLogin();
+    const result = await fetchWithAuth("/auth/me");
+    if (!result.ok || !result.data) return redirectToLogin();
+    const user = result.data;
     if ((user.role || "").toUpperCase() !== "RECIPIENT") return redirectToLogin();
 
     currentUser = user;
@@ -95,11 +123,12 @@ function showRoleDashboard(role) {
 // Donor Dashboard Functions
 async function loadDonorDashboard() {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${MEDICINE_API}/donor/medicines`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const medicines = await res.json();
+    const result = await fetchWithAuth('/medicines/donor/medicines');
+    if (!result.ok || !Array.isArray(result.data)) {
+      document.getElementById('donorMedicines').innerHTML = '<div class="empty-state">Error loading medicines</div>';
+      return;
+    }
+    const medicines = result.data;
     
     displayDonorMedicines(medicines);
   } catch (e) {
@@ -168,8 +197,6 @@ function displayDonorMedicines(medicines) {
 // Recipient Dashboard Functions
 async function loadRecipientDashboard() {
   try {
-    const token = localStorage.getItem('token');
-    
     // Load available medicines (with optional filters)
     const name = document.getElementById('filterName')?.value || '';
     const category = document.getElementById('filterCategory')?.value || '';
@@ -179,17 +206,14 @@ async function loadRecipientDashboard() {
     if (category) params.append('category', category);
     if (expiryBefore) params.append('expiryBefore', expiryBefore);
 
-    const medicinesRes = await fetch(`${MEDICINE_API}${params.toString() ? `?${params.toString()}` : ''}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const medicines = await medicinesRes.json();
+    const medicinesPath = `/medicines${params.toString() ? `?${params.toString()}` : ''}`;
+    const medicinesResult = await fetchWithAuth(medicinesPath);
+    const medicines = Array.isArray(medicinesResult.data) ? medicinesResult.data : [];
     displayAvailableMedicines(medicines);
 
     // Load my requests
-    const requestsRes = await fetch(`${REQUEST_API}/my`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const requests = await requestsRes.json();
+    const requestsResult = await fetchWithAuth('/requests/my');
+    const requests = Array.isArray(requestsResult.data) ? requestsResult.data : [];
     displayMyRequests(requests);
 
   } catch (e) {
@@ -321,17 +345,9 @@ function displayMyRequests(requests) {
 
 async function requestMedicine(medicineId) {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${REQUEST_API}/${medicineId}`, {
-      method: 'POST',
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await res.json();
-    if (res.ok) {
+    const result = await fetchWithAuth(`/requests/${medicineId}`, 'POST');
+    const data = result.data || {};
+    if (result.ok) {
       alert('Medicine request submitted successfully!');
       loadRecipientDashboard(); // Reload to show updated data
     } else {
@@ -362,16 +378,12 @@ async function loadAdminDashboard() {
 async function loadAdminOverview(token) {
   try {
     // Load medicines for stats
-    const medicinesRes = await fetch(`${ADMIN_API}/medicines`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const medicines = await medicinesRes.json();
+    const medicinesResult = await fetchWithAuth('/admin/medicines');
+    const medicines = Array.isArray(medicinesResult.data) ? medicinesResult.data : [];
     
     // Load users for stats
-    const usersRes = await fetch(`${ADMIN_API}/users`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const users = await usersRes.json();
+    const usersResult = await fetchWithAuth('/admin/users');
+    const users = Array.isArray(usersResult.data) ? usersResult.data : [];
     
     // Calculate stats
     const totalMedicines = medicines.length;
@@ -413,11 +425,9 @@ async function renderAnalyticsTab(token) {
     c.className = 'analytics-chart';
     wrapper.appendChild(c);
 
-    const res = await fetch(`${ADMIN_API}/analytics/overview`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (!res.ok) {
+    const result = await fetchWithAuth('/admin/analytics/overview');
+    const data = result.data || {};
+    if (!result.ok) {
       container.innerHTML = '<div class="empty-state">Failed to load analytics</div>';
       return;
     }
@@ -494,12 +504,14 @@ function showAdminTab(tabName, event = null) {
 
 async function loadAdminMedicines(token) {
   try {
-    const res = await fetch(`${ADMIN_API}/medicines`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const medicines = await res.json();
+    const result = await fetchWithAuth('/admin/medicines');
+    const medicines = Array.isArray(result.data) ? result.data : [];
     
     const container = document.getElementById('adminMedicines');
+    if (!medicines.length) {
+      container.innerHTML = '<div class="empty-state">No data found</div>';
+      return;
+    }
     container.innerHTML = medicines.map(medicine => {
       // Debug logging for missing fields
       if (!medicine.name || !medicine.status || !medicine.donor || !medicine.donor.name) {
@@ -543,12 +555,14 @@ async function loadAdminMedicines(token) {
 
 async function loadAdminRequests(token) {
   try {
-    const res = await fetch(`${REQUEST_API}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const requests = await res.json();
+    const result = await fetchWithAuth('/requests');
+    const requests = Array.isArray(result.data) ? result.data : [];
     
     const container = document.getElementById('adminRequests');
+    if (!requests.length) {
+      container.innerHTML = '<div class="empty-state">No data found</div>';
+      return;
+    }
     container.innerHTML = requests.map(request => {
       // Debug logging for missing fields
       if (!request.status || !request.medicineId || !request.medicineId.name || !request.recipientId || !request.recipientId.name) {
@@ -590,12 +604,14 @@ async function loadAdminRequests(token) {
 
 async function loadAdminUsers(token) {
   try {
-    const res = await fetch(`${ADMIN_API}/users`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const users = await res.json();
+    const result = await fetchWithAuth('/admin/users');
+    const users = Array.isArray(result.data) ? result.data : [];
     
     const container = document.getElementById('adminUsers');
+    if (!users.length) {
+      container.innerHTML = '<div class="empty-state">No data found</div>';
+      return;
+    }
     container.innerHTML = users.map(user => {
       // Debug logging for missing fields
       if (!user.name || !user.role) {
@@ -623,20 +639,11 @@ async function loadAdminUsers(token) {
 
 async function approveMedicine(medicineId, action) {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${ADMIN_API}/approve/${medicineId}`, {
-      method: 'PUT',
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ action })
-    });
-    
-    const data = await res.json();
-    if (res.ok) {
+    const result = await fetchWithAuth(`/admin/approve/${medicineId}`, 'PUT', { action });
+    const data = result.data || {};
+    if (result.ok) {
       alert(`Medicine request ${action}d successfully!`);
-      loadAdminMedicines(token); // Reload medicines
+      loadAdminMedicines(localStorage.getItem('token')); // Reload medicines
     } else {
       alert(data.message || `Failed to ${action} medicine`);
     }
@@ -648,16 +655,11 @@ async function approveMedicine(medicineId, action) {
 
 async function updateRequestStatus(requestId, action) {
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${REQUEST_API}/${requestId}/${action}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    
-    const data = await res.json();
-    if (res.ok) {
+    const result = await fetchWithAuth(`/requests/${requestId}/${action}`, 'PATCH');
+    const data = result.data || {};
+    if (result.ok) {
       alert(`Request ${action}d successfully!`);
-      loadAdminRequests(token); // Reload requests
+      loadAdminRequests(localStorage.getItem('token')); // Reload requests
     } else {
       alert(data.message || `Failed to ${action} request`);
     }
