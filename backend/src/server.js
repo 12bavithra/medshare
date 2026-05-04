@@ -68,9 +68,9 @@ app.use(morgan('dev'));
 // CSP headers - allow only self scripts, block inline scripts
 app.use((req, res, next) => {
 	res.setHeader(
-		"Content-Security-Policy",
-		"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
-	);
+  "Content-Security-Policy",
+  "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';"
+);
 	next();
 });
 
