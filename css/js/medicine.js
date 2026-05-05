@@ -1,6 +1,21 @@
-const API_URL = "http://localhost:5000/api";
-const AUTH_API = `${API_URL}/auth`;
-const MEDICINE_API = `${API_URL}/medicines`;
+const API_BASE = `${window.location.origin}/api`;
+const MEDICINE_API = `${API_BASE}/medicines`;
+
+function getAuthHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  };
+}
+
+function extractArrayResponse(data) {
+  console.log("API Response:", data);
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.medicines)) return data.medicines;
+  if (Array.isArray(data?.requests)) return data.requests;
+  return [];
+}
 
 // Check if user is logged in and has required role
 function checkAuth(requiredRole = null) {
@@ -37,17 +52,15 @@ if (donateForm) {
     const quantity = document.getElementById("quantity").value;
     
     try {
-      const token = localStorage.getItem("token");
+      console.log("API URL:", `${API_BASE}/medicines/add`);
       const res = await fetch(`${MEDICINE_API}/add`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ name, description, expiryDate, quantity })
       });
       
       const data = await res.json();
+      console.log("API Response:", data);
       
       if (res.ok) {
         alert("Medicine donated successfully!");
@@ -74,17 +87,17 @@ async function loadMedicines() {
     medicinesGrid.style.display = "none";
     emptyState.style.display = "none";
     
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!localStorage.getItem("token")) {
       window.location.href = "login.html";
       return;
     }
     
     const res = await fetch(`${MEDICINE_API}`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     
-    const medicines = await res.json();
+    const data = await res.json();
+    const medicines = extractArrayResponse(data);
     
     loading.style.display = "none";
     
@@ -133,13 +146,13 @@ async function handleRequest(e) {
   if (!confirm("Are you sure you want to request this medicine?")) return;
   
   try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${API_URL}/requests/${medicineId}`, {
+    const res = await fetch(`${API_BASE}/requests/${medicineId}`, {
       method: "POST",
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     
     const data = await res.json();
+    console.log("API Response:", data);
     
     if (res.ok) {
       alert("Medicine requested successfully!");
@@ -152,7 +165,8 @@ async function handleRequest(e) {
   }
 }
 
-// Load medicines when page loads (for medicines.html)
-if (document.getElementById("medicinesGrid")) {
-  loadMedicines();
-}
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("medicinesGrid")) {
+    loadMedicines();
+  }
+});

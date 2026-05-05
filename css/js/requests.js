@@ -1,4 +1,19 @@
-const API_URL = "http://localhost:5000/api";
+const API_BASE = `${window.location.origin}/api`;
+
+function getAuthHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  };
+}
+
+function extractArrayResponse(data) {
+  console.log("API Response:", data);
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.requests)) return data.requests;
+  return [];
+}
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
@@ -31,26 +46,27 @@ async function loadRequests() {
     let url = '';
     if (user.role === 'ADMIN') {
       title.textContent = 'All Requests';
-      url = `${API_URL}/requests`;
+      url = `${API_BASE}/requests`;
     } else if (user.role === 'RECIPIENT') {
       title.textContent = 'Your Requests';
-      url = `${API_URL}/requests/my`;
+      url = `${API_BASE}/requests/my`;
     } else {
       title.textContent = 'Related Requests';
       // Optional: could add donor-related view later
-      url = `${API_URL}/requests/my`;
+      url = `${API_BASE}/requests/my`;
     }
 
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(url, { headers: getAuthHeaders() });
     const data = await res.json();
+    const items = extractArrayResponse(data);
     loading.style.display = 'none';
 
-    if (!Array.isArray(data) || data.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       empty.style.display = 'block';
       return;
     }
 
-    tbody.innerHTML = data.map(r => {
+    tbody.innerHTML = items.map(r => {
       const medName = r.medicineId?.name || 'Unknown';
       const recName = r.recipientId?.name || 'You';
       const status = r.status;
@@ -84,12 +100,12 @@ async function onAdminAction(e) {
   const action = e.target.getAttribute('data-action');
   if (!confirm(`Are you sure you want to ${action} this request?`)) return;
   try {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_URL}/requests/${id}/${action}`, {
+    const res = await fetch(`${API_BASE}/requests/${id}/${action}`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     const data = await res.json();
+    console.log("API Response:", data);
     if (res.ok) {
       alert(`Request ${action}d`);
       loadRequests();

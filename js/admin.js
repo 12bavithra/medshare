@@ -37,6 +37,7 @@ async function fetchWithAuth(path, method = "GET", body = null) {
   let data;
   try {
     data = await res.json();
+    console.log("API Response:", data);
   } catch (err) {
     console.error("Invalid JSON:", err);
     return { ok: false, data: null };
@@ -47,7 +48,8 @@ async function fetchWithAuth(path, method = "GET", body = null) {
 
 function extractItems(data) {
   console.log("FULL API RESPONSE:", data);
-  const items = data?.medicines || data?.users || data?.requests || data;
+  console.log("Received data:", data);
+  const items = data?.data || data?.medicines || data?.users || data?.requests || data;
   if (!items || items.length === 0) return [];
   if (!Array.isArray(items)) {
     console.error("Expected array but got:", items);
@@ -67,8 +69,10 @@ function checkAdminAuth() {
   return true;
 }
 
-// Tab switching functionality
-document.addEventListener('DOMContentLoaded', function() {
+let medicinesRequestSeq = 0;
+let medicinesRenderSeq = 0;
+
+async function initializeAdminDashboard() {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
   
@@ -99,15 +103,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load initial data
   if (checkAdminAuth()) {
-    loadAdminMedicines();
-    loadAdminUsers();
+    await loadAdminMedicines();
+    await loadAdminUsers();
   }
-});
-document.addEventListener("DOMContentLoaded", () => {
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("Dashboard loaded");
-  if (typeof loadMedicines === "function") loadMedicines();
-  if (typeof loadUsers === "function") loadUsers();
-  if (typeof loadRequests === "function") loadRequests();
+  await initializeAdminDashboard();
 });
 
 function loadMedicines() {
@@ -124,6 +127,7 @@ async function loadAdminMedicines() {
   const loading = document.getElementById("adminLoading");
   
   if (!medicinesList) return;
+  const requestId = ++medicinesRequestSeq;
   
   try {
     loading.style.display = "block";
@@ -138,13 +142,18 @@ async function loadAdminMedicines() {
     }
     
     loading.style.display = "none";
+    if (requestId < medicinesRenderSeq) return;
+    medicinesRenderSeq = requestId;
     
     if (medicines.length === 0) {
       medicinesList.innerHTML = '<p>No medicines found</p>';
       return;
     }
-    
-    medicinesList.innerHTML = medicines.map(medicine => `
+
+    console.log("Final medicines used for render:", medicines);
+    medicinesList.innerHTML = "";
+    medicines.forEach((medicine) => {
+      medicinesList.insertAdjacentHTML("beforeend", `
       <div class="admin-medicine-item">
         <div class="medicine-details">
           <h4>${medicine.name}</h4>
@@ -166,7 +175,8 @@ async function loadAdminMedicines() {
           `}
         </div>
       </div>
-    `).join("");
+    `);
+    });
     
     // Add event listeners to action buttons
     document.querySelectorAll('.approve-btn').forEach(btn => {
@@ -208,8 +218,10 @@ async function loadAdminUsers() {
       usersList.innerHTML = '<p>No users found</p>';
       return;
     }
-    
-    usersList.innerHTML = users.map(user => `
+
+    usersList.innerHTML = "";
+    users.forEach((user) => {
+      usersList.insertAdjacentHTML("beforeend", `
       <div class="admin-user-item">
         <div class="user-details">
           <h4>${user.name}</h4>
@@ -219,7 +231,8 @@ async function loadAdminUsers() {
           <p><strong>Status:</strong> <span class="status-${user.isActive ? 'active' : 'inactive'}">${user.isActive ? 'Active' : 'Inactive'}</span></p>
         </div>
       </div>
-    `).join("");
+    `);
+    });
     
   } catch (err) {
     loading.style.display = "none";

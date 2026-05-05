@@ -1,5 +1,22 @@
-const API_URL = "http://localhost:5000/api";
-const ADMIN_API = `${API_URL}/admin`;
+const API_BASE = `${window.location.origin}/api`;
+const ADMIN_API = `${API_BASE}/admin`;
+
+function getAuthHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  };
+}
+
+function extractArrayResponse(data) {
+  console.log("API Response:", data);
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.medicines)) return data.medicines;
+  if (Array.isArray(data?.users)) return data.users;
+  if (Array.isArray(data?.requests)) return data.requests;
+  return [];
+}
 
 // Check if user is logged in and has ADMIN role
 function checkAdminAuth() {
@@ -53,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load initial data
   if (checkAdminAuth()) {
     loadAdminMedicines();
+    loadAdminUsers();
   }
 });
 
@@ -67,12 +85,12 @@ async function loadAdminMedicines() {
     loading.style.display = "block";
     medicinesList.innerHTML = "";
     
-    const token = localStorage.getItem("token");
     const res = await fetch(`${ADMIN_API}/medicines`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     
-    const medicines = await res.json();
+    const data = await res.json();
+    const medicines = extractArrayResponse(data);
     
     loading.style.display = "none";
     
@@ -131,12 +149,12 @@ async function loadAdminUsers() {
     loading.style.display = "block";
     usersList.innerHTML = "";
     
-    const token = localStorage.getItem("token");
     const res = await fetch(`${ADMIN_API}/users`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     
-    const users = await res.json();
+    const data = await res.json();
+    const users = extractArrayResponse(data);
     
     loading.style.display = "none";
     
@@ -168,21 +186,19 @@ async function handleAdminAction(medicineId, action) {
   if (!confirm(`Are you sure you want to ${action} this medicine request?`)) return;
   
   try {
-    const token = localStorage.getItem("token");
     const res = await fetch(`${ADMIN_API}/approve/${medicineId}`, {
       method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ action })
     });
     
     const data = await res.json();
+    console.log("API Response:", data);
     
     if (res.ok) {
       alert(`Medicine request ${action}d successfully!`);
-      loadAdminMedicines(); // Refresh the list
+      loadAdminMedicines();
+      loadAdminStats();
     } else {
       alert(data.message || `Failed to ${action} medicine request`);
     }
@@ -193,13 +209,13 @@ async function handleAdminAction(medicineId, action) {
 
 // Load stats and render charts
 async function loadAdminStats() {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+  if (!localStorage.getItem("token")) return;
   try {
     const res = await fetch(`${ADMIN_API}/stats`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: getAuthHeaders()
     });
     const stats = await res.json();
+    console.log("API Response:", stats);
     if (!res.ok) return;
 
     // Render simple numbers if charts not present

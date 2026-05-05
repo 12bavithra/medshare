@@ -40,6 +40,7 @@ async function fetchWithAuth(path, method = "GET", body = null) {
   let data;
   try {
     data = await res.json();
+    console.log("API Response:", data);
   } catch (err) {
     console.error("Invalid JSON:", err);
     return { ok: false, data: null, status: res.status };
@@ -50,7 +51,7 @@ async function fetchWithAuth(path, method = "GET", body = null) {
 
 function extractItems(data) {
   console.log("FULL API RESPONSE:", data);
-  const items = data?.medicines || data?.users || data?.requests || data;
+  const items = data?.data || data?.medicines || data?.users || data?.requests || data;
   if (!items || items.length === 0) return [];
   if (!Array.isArray(items)) {
     console.error("Expected array but got:", items);
