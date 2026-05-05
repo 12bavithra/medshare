@@ -1,55 +1,24 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // Validate email configuration with clear warnings
 const validateEmailConfig = () => {
-  const requiredVars = ['EMAIL_USER', 'EMAIL_PASS'];
+  const requiredVars = ['RESEND_API_KEY'];
   const missing = requiredVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
-    console.warn('⚠️ Missing Gmail credentials in .env');
+    console.warn('⚠️ Missing Resend configuration in .env');
     console.warn('⚠️ Missing environment variables:', missing.join(', '));
     console.warn('⚠️ Email notifications will be skipped');
     return false;
   }
   
-  // Additional validation for Gmail format
-  if (!process.env.EMAIL_USER.includes('@gmail.com')) {
-    console.warn('⚠️ EMAIL_USER should be a Gmail address');
-    return false;
-  }
-  
   console.log('✅ Email configuration validated');
   return true;
-};
-
-// Create Gmail SMTP transporter with improved error handling
-const createTransporter = async () => {
-  try {
-    // Validate configuration first
-    if (!validateEmailConfig()) {
-      throw new Error('Invalid email configuration - missing Gmail credentials');
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
-    // Verify connection with timeout
-    console.log('🔗 Verifying Gmail SMTP connection...');
-    await transporter.verify();
-    console.log('✅ Gmail SMTP connection verified successfully');
-    return transporter;
-  } catch (error) {
-    console.error('Email Error: Failed to create Gmail transporter:', error.message);
-    throw error;
-  }
 };
 
 // Main email sending utility with robust error handling
@@ -63,25 +32,19 @@ export const sendEmail = async (to, subject, htmlMessage) => {
       throw new Error('Missing required email parameters: to, subject, or htmlMessage');
     }
 
-    // Check if Gmail credentials are available
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    // Check if Resend config is available
+    if (!validateEmailConfig()) {
       console.warn('⚠️ Email skipped – missing config');
-      console.warn('⚠️ Gmail credentials not found in .env file');
       return {
         success: false,
-        error: 'Missing Gmail credentials',
+        error: 'Missing Resend configuration',
         recipient: to,
         fallbackMessage: 'Email skipped – missing config'
       };
     }
-
-    const transporter = await createTransporter();
     
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || '"MedShare" <noreply@medshare.com>',
-      to: to,
-      subject: subject,
-      html: `
+    const from = process.env.EMAIL_USER || process.env.EMAIL_FROM || '"MedShare" <noreply@medshare.com>';
+    const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
           <div style="background-color: #2b8a3e; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">💙 MedShare</h1>
@@ -95,31 +58,28 @@ export const sendEmail = async (to, subject, htmlMessage) => {
             </p>
           </div>
         </div>
-      `
-    };
+      `;
 
-    console.log("Sending email to:", mailOptions.to);
-    let info;
-    try {
-      info = await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully");
-    } catch (error) {
-      console.error("Email send error:", error);
-      throw error;
-    }
+    console.log("Sending email to:", to);
+    const result = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html
+    });
     
     console.log(`✅ Email sent successfully to ${to}`);
-    console.log(`📬 Message ID: ${info.messageId}`);
-    console.log(`📧 Email sent from: ${process.env.EMAIL_USER}`);
+    console.log(`📬 Message ID: ${result?.data?.id}`);
+    console.log("Email sent successfully via Resend");
     
     return {
       success: true,
-      messageId: info.messageId,
+      messageId: result?.data?.id,
       recipient: to,
-      sender: process.env.EMAIL_USER
+      sender: from
     };
   } catch (error) {
-    console.error('Email Error:', error.message);
+    console.error('Resend Email Error:', error);
     console.error('Email Error Details:', {
       recipient: to,
       subject: subject,
@@ -127,21 +87,10 @@ export const sendEmail = async (to, subject, htmlMessage) => {
       errorCode: error.code || 'UNKNOWN'
     });
     
-    // Log specific error types for better debugging
-    if (error.code === 'EAUTH') {
-      console.error('Email Error: Gmail authentication failed - check EMAIL_USER and EMAIL_PASS');
-    } else if (error.code === 'ECONNECTION') {
-      console.error('Email Error: Connection to Gmail SMTP failed - check network connection');
-    } else if (error.code === 'ETIMEDOUT') {
-      console.error('Email Error: Gmail SMTP connection timed out');
-    } else if (error.message.includes('Invalid email configuration')) {
-      console.warn('⚠️ Email skipped – missing config');
-    }
-    
     // Return failure but don't break the application
     return {
       success: false,
-      error: error.message,
+      error: error?.message || 'Unknown email error',
       recipient: to,
       fallbackMessage: 'Email skipped – missing config'
     };
