@@ -34,20 +34,11 @@ const createTransporter = async () => {
     }
 
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 465,
-      secure: process.env.EMAIL_SECURE === 'true' || true, // Default to secure
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      // Add connection timeout and retry settings
-      connectionTimeout: 60000, // 60 seconds
-      greetingTimeout: 30000,   // 30 seconds
-      socketTimeout: 60000      // 60 seconds
+      }
     });
 
     // Verify connection with timeout
@@ -107,8 +98,15 @@ export const sendEmail = async (to, subject, htmlMessage) => {
       `
     };
 
-    console.log('📤 Sending email via Gmail SMTP...');
-    const info = await transporter.sendMail(mailOptions);
+    console.log("Sending email to:", mailOptions.to);
+    let info;
+    try {
+      info = await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Email send error:", error);
+      throw error;
+    }
     
     console.log(`✅ Email sent successfully to ${to}`);
     console.log(`📬 Message ID: ${info.messageId}`);
