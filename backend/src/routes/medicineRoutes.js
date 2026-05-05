@@ -42,7 +42,7 @@ router.post('/add', authRequired, requireRole(['DONOR']), async (req, res) => {
       donor: req.user.id,
       name: name,
       expiryDate: new Date(expiryDate),
-      status: 'AVAILABLE'
+      status: 'PENDING'
     });
 
     let medicine;
@@ -61,7 +61,8 @@ router.post('/add', authRequired, requireRole(['DONOR']), async (req, res) => {
         category,
         expiryDate: new Date(expiryDate),
         quantity: parseInt(quantity),
-        donor: req.user.id
+        donor: req.user.id,
+        status: 'PENDING'
       });
     }
 
@@ -255,7 +256,7 @@ router.put('/update/:id', authRequired, requireRole(['DONOR', 'ADMIN']), async (
     }
     
     // Validate and set status
-    if (status && ['AVAILABLE', 'CLAIMED', 'EXPIRED'].includes(status)) {
+    if (status && ['PENDING', 'AVAILABLE', 'REJECTED', 'CLAIMED', 'EXPIRED'].includes(status)) {
       update.status = status;
     }
 

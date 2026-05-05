@@ -76,7 +76,7 @@ router.put('/approve/:id', async (req, res) => {
     }
 
     if (action === 'approve') {
-      medicine.status = 'CLAIMED';
+      medicine.status = 'AVAILABLE';
       await medicine.save();
 
       // Notify recipient, donor, and admin
@@ -128,7 +128,7 @@ router.put('/approve/:id', async (req, res) => {
       const recipient = medicine.requestedBy ? await User.findById(medicine.requestedBy) : null;
       const donorUser = medicine.donor ? await User.findById(medicine.donor) : null;
 
-      medicine.status = 'AVAILABLE';
+      medicine.status = 'REJECTED';
       medicine.requestedBy = undefined;
       medicine.requestedAt = undefined;
       await medicine.save();

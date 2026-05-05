@@ -9,8 +9,8 @@ const medicineSchema = new mongoose.Schema({
   donor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { 
     type: String, 
-    enum: ['AVAILABLE', 'CLAIMED', 'EXPIRED'], 
-    default: 'AVAILABLE' 
+    enum: ['PENDING', 'AVAILABLE', 'REJECTED', 'CLAIMED', 'EXPIRED'], 
+    default: 'PENDING' 
   },
   requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   requestedAt: { type: Date },

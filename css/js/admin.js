@@ -111,13 +111,12 @@ async function loadAdminMedicines() {
           ${medicine.requestedBy ? `<p><strong>Requested by:</strong> ${medicine.requestedBy.name} (${medicine.requestedBy.email})</p>` : ''}
         </div>
         <div class="medicine-actions">
-          ${medicine.status === 'AVAILABLE' ? `
-            <button class="btn small" disabled>No Action Needed</button>
-          ` : medicine.status === 'CLAIMED' ? `
+          ${(() => { console.log("Medicine status:", medicine.status); return ""; })()}
+          ${medicine.status === 'PENDING' ? `
             <button class="btn green small approve-btn" data-id="${medicine._id}">Approve</button>
             <button class="btn red small reject-btn" data-id="${medicine._id}">Reject</button>
           ` : `
-            <button class="btn small" disabled>Expired</button>
+            <button class="btn small" disabled>No Action Needed</button>
           `}
         </div>
       </div>
