@@ -93,7 +93,15 @@ router.put('/approve/:id', async (req, res) => {
             medicine.quantity,
             'approved'
           );
-          await sendEmail(recipient.email, 'Request Approved - MedShare', html);
+          await sendEmail(
+            recipient.email,
+            'Request Approved - MedShare',
+            `
+              <h2>Request Approved</h2>
+              <p>Your request has been approved</p>
+              <p><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</p>
+            `
+          );
         }
 
         if (donorUser?.email) {
@@ -103,7 +111,15 @@ router.put('/approve/:id', async (req, res) => {
             <ul>
               <li><strong>Quantity Remaining:</strong> ${medicine.quantity ?? 'N/A'}</li>
             </ul>`;
-          await sendEmail(donorUser.email, 'Your Donation Request Approved - MedShare', donorHtml);
+          await sendEmail(
+            donorUser.email,
+            'Donation Approved - MedShare',
+            `
+              <h2>Donation Approved</h2>
+              <p>Your donated medicine has been approved by admin</p>
+              <p><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</p>
+            `
+          );
         }
 
         if (process.env.ADMIN_EMAIL) {
@@ -116,7 +132,20 @@ router.put('/approve/:id', async (req, res) => {
               <li><strong>Donor:</strong> ${donorUser?.name || 'Unknown'} (${donorUser?.email || 'N/A'})</li>
               <li><strong>Processed At:</strong> ${new Date().toISOString()}</li>
             </ul>`;
-          await sendEmail(process.env.ADMIN_EMAIL, 'Admin Confirmation: Request Approved - MedShare', adminHtml);
+          await sendEmail(
+            process.env.ADMIN_EMAIL,
+            'Admin Notification - MedShare',
+            `
+              <h2>Admin Notification</h2>
+              <p>A new donation/request requires your attention</p>
+              <ul>
+                <li><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</li>
+                <li><strong>Recipient:</strong> ${recipient?.name || 'Unknown'} (${recipient?.email || 'N/A'})</li>
+                <li><strong>Donor:</strong> ${donorUser?.name || 'Unknown'} (${donorUser?.email || 'N/A'})</li>
+                <li><strong>Processed At:</strong> ${new Date().toISOString()}</li>
+              </ul>
+            `
+          );
         }
       } catch (emailError) {
         console.error('Email Error (admin approve):', emailError.message);

@@ -112,7 +112,20 @@ router.post('/add', authRequired, requireRole(['DONOR']), async (req, res) => {
               new Date(medicine.expiryDate).toLocaleDateString()
             );
             try {
-              const adminResult = await sendEmail(process.env.ADMIN_EMAIL, 'New Donation Submitted - MedShare', adminHtml);
+              const adminResult = await sendEmail(
+                process.env.ADMIN_EMAIL,
+                'Admin Notification - MedShare',
+                `
+                  <h2>Admin Notification</h2>
+                  <p>A new donation/request requires your attention</p>
+                  <ul>
+                    <li><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</li>
+                    <li><strong>Donor:</strong> ${donor?.name || 'Unknown'} (${donor?.email || 'N/A'})</li>
+                    <li><strong>Quantity:</strong> ${medicine?.quantity ?? 'N/A'}</li>
+                    <li><strong>Expiry Date:</strong> ${new Date(medicine.expiryDate).toLocaleDateString()}</li>
+                  </ul>
+                `
+              );
               if (adminResult.success) {
                 console.log(`✅ Admin notified at ${process.env.ADMIN_EMAIL} about new donation`);
               } else {
@@ -462,7 +475,15 @@ router.put('/approve/:id', authRequired, requireRole(['ADMIN']), async (req, res
                 'approved'
               );
               try {
-                const emailResult = await sendEmail(recipient.email, 'Request Approved - MedShare', htmlMessage);
+                const emailResult = await sendEmail(
+                  recipient.email,
+                  'Request Approved - MedShare',
+                  `
+                    <h2>Request Approved</h2>
+                    <p>Your request has been approved</p>
+                    <p><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</p>
+                  `
+                );
                 if (emailResult.success) {
                   console.log(`✅ Approval notification email sent to ${recipient.email}`);
                 } else {

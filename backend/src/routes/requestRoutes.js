@@ -79,7 +79,20 @@ router.post('/:medicineId', authRequired, requireRole(['RECIPIENT']), async (req
               medicine.quantity
             );
             try {
-              const adminResult = await sendEmail(process.env.ADMIN_EMAIL, 'New Request Submitted - MedShare', adminHtml);
+              const adminResult = await sendEmail(
+                process.env.ADMIN_EMAIL,
+                'Admin Notification - MedShare',
+                `
+                  <h2>Admin Notification</h2>
+                  <p>A new donation/request requires your attention</p>
+                  <ul>
+                    <li><strong>Medicine:</strong> ${medicine?.name || 'Unknown'}</li>
+                    <li><strong>Recipient:</strong> ${recipient?.name || 'Unknown'} (${recipient?.email || 'N/A'})</li>
+                    <li><strong>Donor:</strong> ${medicine?.donor?.name || 'Unknown'} (${medicine?.donor?.email || 'N/A'})</li>
+                    <li><strong>Quantity:</strong> ${medicine?.quantity ?? 'N/A'}</li>
+                  </ul>
+                `
+              );
               if (adminResult.success) {
                 console.log(`✅ Admin notified at ${process.env.ADMIN_EMAIL} about new request`);
               } else {
@@ -181,7 +194,15 @@ router.patch('/:id/approve', authRequired, requireRole(['ADMIN']), async (req, r
               'approved'
             );
             try {
-              const emailResult = await sendEmail(reqDoc.recipientId.email, 'Request Approved - MedShare', htmlMessage);
+              const emailResult = await sendEmail(
+                reqDoc.recipientId.email,
+                'Request Approved - MedShare',
+                `
+                  <h2>Request Approved</h2>
+                  <p>Your request has been approved</p>
+                  <p><strong>Medicine:</strong> ${reqDoc?.medicineId?.name || 'Unknown'}</p>
+                `
+              );
               if (emailResult.success) {
                 console.log(`✅ Request approval email sent to ${reqDoc.recipientId.email}`);
               } else {
@@ -199,7 +220,15 @@ router.patch('/:id/approve', authRequired, requireRole(['ADMIN']), async (req, r
                 <h2 style=\"margin-top:0;color:#2b8a3e\">✅ Request Approved</h2>
                 <p>A request for your donated medicine <strong>${reqDoc.medicineId.name}</strong> was approved.</p>`;
               try {
-                await sendEmail(donorUser.email, 'Your Donation Request Approved - MedShare', donorHtml);
+                await sendEmail(
+                  donorUser.email,
+                  'Donation Approved - MedShare',
+                  `
+                    <h2>Donation Approved</h2>
+                    <p>Your donated medicine has been approved by admin</p>
+                    <p><strong>Medicine:</strong> ${reqDoc?.medicineId?.name || 'Unknown'}</p>
+                  `
+                );
               } catch (e) {
                 console.error('Approval email send error (donor):', e.message);
               }
@@ -215,7 +244,19 @@ router.patch('/:id/approve', authRequired, requireRole(['ADMIN']), async (req, r
                 <li><strong>Processed At:</strong> ${reqDoc.processedAt?.toISOString() || new Date().toISOString()}</li>
               </ul>`;
             try {
-              await sendEmail(process.env.ADMIN_EMAIL, 'Admin Confirmation: Request Approved - MedShare', adminHtml);
+              await sendEmail(
+                process.env.ADMIN_EMAIL,
+                'Admin Notification - MedShare',
+                `
+                  <h2>Admin Notification</h2>
+                  <p>A new donation/request requires your attention</p>
+                  <ul>
+                    <li><strong>Medicine:</strong> ${reqDoc?.medicineId?.name || 'Unknown'}</li>
+                    <li><strong>Recipient:</strong> ${reqDoc?.recipientId?.name || 'Unknown'} (${reqDoc?.recipientId?.email || 'N/A'})</li>
+                    <li><strong>Processed At:</strong> ${reqDoc?.processedAt?.toISOString() || new Date().toISOString()}</li>
+                  </ul>
+                `
+              );
             } catch (e) {
               console.error('Approval email send error (admin):', e.message);
             }
