@@ -124,4 +124,9 @@ function loadMedicines() {
   return loadDonorMedicines();
 }
 
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
 

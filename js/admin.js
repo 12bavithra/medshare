@@ -71,6 +71,67 @@ function checkAdminAuth() {
 
 let medicinesRequestSeq = 0;
 let medicinesRenderSeq = 0;
+let adminChartInstance = null;
+
+function renderChart(data) {
+  const canvas = document.getElementById("adminChart");
+  if (!canvas) {
+    console.warn("adminChart canvas not found");
+    return;
+  }
+  if (typeof window.Chart === "undefined") {
+    console.warn("Chart.js is not loaded");
+    return;
+  }
+
+  const medicines = extractItems(data);
+  if (!Array.isArray(medicines)) {
+    return;
+  }
+
+  const statusCounts = {
+    AVAILABLE: 0,
+    PENDING: 0,
+    REJECTED: 0
+  };
+
+  medicines.forEach((medicine) => {
+    const status = (medicine?.status || "").toUpperCase();
+    if (Object.prototype.hasOwnProperty.call(statusCounts, status)) {
+      statusCounts[status] += 1;
+    }
+  });
+
+  const chartData = [
+    statusCounts.AVAILABLE,
+    statusCounts.PENDING,
+    statusCounts.REJECTED
+  ];
+
+  console.log("Chart debug data:", { statusCounts, chartData, medicines });
+
+  if (adminChartInstance) {
+    adminChartInstance.destroy();
+  }
+
+  adminChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: ["AVAILABLE", "PENDING", "REJECTED"],
+      datasets: [
+        {
+          label: "Medicines by Status",
+          data: chartData,
+          backgroundColor: ["#0d6efd", "#ffc107", "#dc3545"]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
 
 async function initializeAdminDashboard() {
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -134,6 +195,7 @@ async function loadAdminMedicines() {
     medicinesList.innerHTML = "";
     
     const { ok, data } = await fetchWithAuth("/admin/medicines");
+    renderChart(data);
     const medicines = extractItems(data);
     if (!ok || medicines === null) {
       loading.style.display = "none";
@@ -256,4 +318,9 @@ async function handleAdminAction(medicineId, action) {
   } catch (err) {
     alert("Network error. Please try again.");
   }
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
 }

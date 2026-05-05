@@ -12,7 +12,7 @@
     <nav>
       <a href="index.html">Home</a>
       <a href="admin.html" class="active">Admin</a>
-      <a href="login.html">Login</a>
+      <a href="#" onclick="logout()">Logout</a>
     </nav>
   </header>
 
@@ -25,6 +25,10 @@
     <div class="admin-tabs">
       <button class="tab-btn active" data-tab="medicines">Medicines</button>
       <button class="tab-btn" data-tab="users">Users</button>
+    </div>
+
+    <div class="chart-section">
+      <canvas id="adminChart"></canvas>
     </div>
 
     <!-- Medicines Tab -->
@@ -48,6 +52,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/admin.js"></script>
 </body>
 </html>
