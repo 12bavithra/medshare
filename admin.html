@@ -7,12 +7,10 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <div class="logo">💙 MedShare</div>
-      </div>
-      <nav class="nav">
+  <header>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <div class="logo">💙 MedShare</div>
+      <nav>
         <a href="index.html">Home</a>
         <a href="admin.html" class="active">Admin</a>
         <a href="#" onclick="logout()">Logout</a>
@@ -20,12 +18,10 @@
     </div>
   </header>
 
-  <main class="container">
-    <div class="page-header admin-page-header">
-      <div class="page-header-text">
-        <h2>Admin Dashboard</h2>
-        <p>Manage medicines, users, and approve requests</p>
-      </div>
+  <div class="container">
+    <div class="page-header">
+      <h2>Admin Dashboard</h2>
+      <p>Manage medicines, users, and approve requests</p>
     </div>
 
     <div class="admin-tabs">
@@ -33,34 +29,22 @@
       <button class="tab-btn" data-tab="users">Users</button>
     </div>
 
-    <section class="dashboard-card chart-card">
-      <div class="dashboard-header">
-        <h3>Overview</h3>
-        <span class="hint">Live snapshot</span>
-      </div>
-      <div class="chart-section">
-        <canvas id="adminChart"></canvas>
-      </div>
-    </section>
+    <div class="chart-section">
+      <canvas id="adminChart"></canvas>
+    </div>
 
     <!-- Medicines Tab -->
     <div class="tab-content active" id="medicinesTab">
-      <div class="section-header">
-        <h3>All Medicines</h3>
-        <p class="section-subtitle">Review donations and handle requests</p>
-      </div>
-      <div class="medicines-list admin-items-grid" id="adminMedicinesList">
+      <h3>All Medicines</h3>
+      <div class="medicines-list" id="adminMedicinesList">
         <!-- Medicines will be loaded here -->
       </div>
     </div>
 
     <!-- Users Tab -->
     <div class="tab-content" id="usersTab">
-      <div class="section-header">
-        <h3>All Users</h3>
-        <p class="section-subtitle">Monitor accounts and roles</p>
-      </div>
-      <div class="users-list admin-items-grid" id="adminUsersList">
+      <h3>All Users</h3>
+      <div class="users-list" id="adminUsersList">
         <!-- Users will be loaded here -->
       </div>
     </div>
@@ -68,7 +52,7 @@
     <div class="loading" id="adminLoading" style="display: none;">
       <p>Loading data...</p>
     </div>
-  </main>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/admin.js"></script>

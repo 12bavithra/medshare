@@ -7,29 +7,22 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <header class="header site-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <div class="logo">💙 MedShare</div>
-        <div class="page-title">
-          <h1>Donor Dashboard</h1>
-          <p class="muted">Track your donations and their status</p>
-        </div>
-      </div>
-      <nav class="nav">
+  <header class="header">
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <h1 style="margin:0;">Donor Dashboard</h1>
+      <nav>
         <a href="index.html">Home</a>
-        <a href="donate.html" class="btn green">Add New Medicine</a>
+        <a href="donate.html" class="btn">Add New Medicine</a>
         <a href="#" onclick="logout()">Logout</a>
       </nav>
+      </div>
     </div>
   </header>
 
   <main class="container">
-    <section class="dashboard-card">
-      <div class="dashboard-header">
-        <h3>Your Donations</h3>
-        <span class="hint">Most recent first</span>
-      </div>
+    <section class="card">
+      <h2>Your Donations</h2>
       <div id="donorLoading" class="loading" style="display:none">Loading...</div>
       <div id="donorEmpty" class="empty" style="display:none">You haven't donated any medicines yet.</div>
       <div class="table-responsive">
