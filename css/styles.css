@@ -320,6 +320,54 @@ textarea {
   margin: 10px 0;
 }
 
+/* -------------------------------
+   Admin chart section (admin.html)
+   Fix: stretched chart + empty space
+-------------------------------- */
+.admin-chart-card {
+  margin: 14px 0 22px;
+}
+
+.admin-chart-card .chart-section {
+  padding: 14px 18px 18px;
+}
+
+/* Constrain chart height so it never stretches too tall */
+.admin-chart-card #adminChart {
+  display: block;
+  width: 100% !important;
+  height: 320px !important;
+  max-height: 320px !important;
+}
+
+@media (max-width: 768px) {
+  .admin-chart-card #adminChart {
+    height: 260px !important;
+    max-height: 260px !important;
+  }
+}
+
+/* Also keep analytics chart (dashboard admin tab) from becoming huge */
+.analytics-chart-wrap {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.analytics-chart {
+  display: block;
+  width: 100% !important;
+  height: 320px !important;
+  max-height: 320px !important;
+}
+
+@media (max-width: 768px) {
+  .analytics-chart {
+    height: 260px !important;
+    max-height: 260px !important;
+  }
+}
+
 /* Improved medicine grid layout */
 .medicines-grid {
   display: grid;
@@ -750,4 +798,224 @@ form input::placeholder, textarea::placeholder { color: #9ca3af; }
 .medicine-card:hover, .admin-medicine-item:hover, .admin-user-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+/* =========================================================
+   Recipient Dashboard UI (dashboard.html) — scoped overrides
+   - Does NOT change JS behavior or API hooks
+   ========================================================= */
+
+.dashboard-page {
+  background: #f7fbf8;
+}
+
+.dashboard-page header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(90deg, #1f7a33, #2b8a3e);
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+.dashboard-page header .logo {
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.dashboard-page nav a {
+  color: rgba(255,255,255,0.92);
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin: 0 6px;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.dashboard-page nav a:hover {
+  color: #ffffff;
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-1px);
+}
+
+.dashboard-page nav a.active {
+  color: #ffffff;
+  background: rgba(255,255,255,0.18);
+}
+
+/* Welcome header alignment */
+.dashboard-page .page-header {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.dashboard-page .page-header h2 {
+  margin: 0 0 6px;
+  letter-spacing: -0.2px;
+}
+
+.dashboard-page .subtitle {
+  margin: 0;
+}
+
+/* Recipient filters: modern, aligned, responsive */
+#recipientDashboard .filters-bar {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  padding: 18px 25px 0;
+  margin: 0 0 8px;
+}
+
+#recipientDashboard .filter-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: #495057;
+  margin-bottom: 6px;
+}
+
+#recipientDashboard .filter-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+}
+
+#recipientDashboard .filter-field input:focus {
+  border-color: rgba(43, 138, 62, 0.45);
+  box-shadow: 0 0 0 3px rgba(43, 138, 62, 0.12);
+}
+
+#recipientDashboard .filter-action {
+  height: 42px;
+  padding: 0 16px;
+  margin: 0;
+  border-radius: 10px;
+}
+
+/* Fix stretched/broken cards: tighter grid + no huge inner padding */
+#recipientDashboard #availableMedicines.medicines-grid,
+#recipientDashboard #myRequests.medicines-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  padding: 18px 25px 25px;
+  margin-top: 0;
+}
+
+/* Card structure: keep vertical compact; button sits at bottom */
+#recipientDashboard .medicine-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+#recipientDashboard .medicine-card-header {
+  margin-bottom: 10px;
+}
+
+#recipientDashboard .medicine-title {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+#recipientDashboard .medicine-description {
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #6c757d;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#recipientDashboard .medicine-details {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+#recipientDashboard .medicine-detail-label {
+  font-size: 11px;
+}
+
+#recipientDashboard .medicine-detail-value {
+  font-size: 13px;
+}
+
+#recipientDashboard .medicine-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+#recipientDashboard .request-btn {
+  white-space: nowrap;
+}
+
+/* Make buttons and badges align nicely even with long content */
+#recipientDashboard .medicine-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#recipientDashboard .medicine-status {
+  flex: 0 0 auto;
+}
+
+#recipientDashboard .medicine-title {
+  margin: 0;
+  min-width: 0;
+}
+
+#recipientDashboard .medicine-title,
+#recipientDashboard .medicine-detail-value {
+  word-break: break-word;
+}
+
+#recipientDashboard .medicine-actions .btn.small {
+  margin: 0;
+}
+
+/* Make the request status badge look consistent inside cards */
+#recipientDashboard .request-status {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  #recipientDashboard .filters-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+  #recipientDashboard .filter-action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  #recipientDashboard .filters-bar {
+    grid-template-columns: 1fr;
+    padding: 16px 16px 0;
+  }
+  #recipientDashboard #availableMedicines.medicines-grid,
+  #recipientDashboard #myRequests.medicines-grid {
+    padding: 16px;
+  }
+  #recipientDashboard .medicine-details {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-page header {
+    padding: 12px 16px;
+  }
 }

@@ -6,7 +6,7 @@
   <title>Dashboard - MedShare</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="dashboard-page">
   <header>
     <div class="logo">💙 MedShare</div>
     <nav>
@@ -43,23 +43,23 @@
           <h3>Available Medicines</h3>
         </div>
         <!-- Filters: Name / Category / Expiry-before -->
-        <div class="filters" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:16px 0;">
-          <div>
+        <div class="filters filters-bar">
+          <div class="filter-field">
             <label for="filterName">Search by name</label>
             <input id="filterName" type="text" placeholder="e.g., paracetamol" />
           </div>
 
-          <div>
+          <div class="filter-field">
             <label for="filterCategory">Category</label>
             <input id="filterCategory" type="text" placeholder="e.g., pain, fever" />
           </div>
 
-          <div>
+          <div class="filter-field">
             <label for="filterExpiry">Expiry before</label>
             <input id="filterExpiry" type="date" />
           </div>
 
-          <button id="filterSearchBtn" class="btn green">Search</button>
+          <button id="filterSearchBtn" class="btn green filter-action">Search</button>
         </div>
         <div id="availableMedicines" class="medicines-grid">
           <div class="loading">Loading available medicines...</div>
