@@ -143,6 +143,21 @@ medshare/
 - `GET /api/admin/users` - View all users
 - `PUT /api/admin/approve/:id` - Approve/reject requests
 
+
+## Screenshots
+
+### Home Page
+![Home](screenshots/home.png)
+
+### Login Page
+![Login](screenshots/login.png)
+
+### Recipient Dashboard
+![Recipient](screenshots/Recipient_dashboard.png)
+
+### Admin Dashboard
+![Admin](screenshots/admin_dashboard.png)
+
 ## 🎯 Next Steps
 
 The system is now fully functional with:
