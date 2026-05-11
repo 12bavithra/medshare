@@ -146,19 +146,30 @@ medshare/
 
 ## Screenshots
 
+## Screenshots
+
 ### Home Page
-![Home](screenshots/home.png)
+![Home](backend/screenshots/home.png)
 
 ### Login Page
-![Login](screenshots/login.png)
+![Login](backend/screenshots/login.png)
 
 ### Recipient Dashboard
-![Recipient](screenshots/Recipient_dashboard.png)
+![Recipient Dashboard](backend/screenshots/Recipient_dashboard.png)
 
 ### Admin Dashboard
-![Admin](screenshots/admin_dashboard.png)
+![Admin Dashboard](backend/screenshots/admin_dashboard.png)
 
-## 🎯 Next Steps
+### Admin Approve Page
+![Admin Approve](backend/screenshots/admin_aprove.png)
+
+### Admin Notification Page
+![Admin Notification](backend/screenshots/admin_notification.png)
+
+### User Donate Page
+![User Donate](backend/screenshots/user_donate.png)
+
+Next step
 
 The system is now fully functional with:
 - ✅ User authentication and role management
