@@ -191,6 +191,7 @@ Ready for production deployment or additional features like:
 - **Auth fails?** Check JWT_SECRET in environment
 - **Database issues?** Ensure MongoDB is running locally
 
-## 📝 License
-
-This project is for educational and humanitarian purposes.
+## 👩‍💻 Author
+**Bavithra B**  
+Final Year B.Tech IT Student  
+🔗 GitHub: https://github.com/12bavithra
